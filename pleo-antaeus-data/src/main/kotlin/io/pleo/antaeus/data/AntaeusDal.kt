@@ -7,15 +7,14 @@
 
 package io.pleo.antaeus.data
 
+import io.pleo.antaeus.data.model.InvoiceSearchQuery
 import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Customer
 import io.pleo.antaeus.models.Invoice
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.insert
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 
 class AntaeusDal(private val db: Database) {
@@ -36,6 +35,26 @@ class AntaeusDal(private val db: Database) {
                 .selectAll()
                 .map { it.toInvoice() }
         }
+    }
+
+    fun searchInvoices(invoiceSearchQuery: InvoiceSearchQuery): List<Invoice> {
+        with(invoiceSearchQuery) {
+            val selectExpression: Op<Boolean> = InvoiceTable.status.eq(status.name)
+
+            return transaction(db) {
+                InvoiceTable
+                        .select { selectExpression }
+                        .map { it.toInvoice() }
+            }
+        }
+    }
+
+    fun updateInvoice(updatedInvoice: Invoice): Invoice {
+        transaction(db) {
+            // Update the invoice.
+            InvoiceTable.update { updatedInvoice }
+        }
+        return updatedInvoice
     }
 
     fun createInvoice(amount: Money, customer: Customer, status: InvoiceStatus = InvoiceStatus.PENDING): Invoice? {
