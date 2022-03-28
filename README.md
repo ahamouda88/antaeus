@@ -117,7 +117,7 @@ The solution that I came up with involves adding some new components & logic to 
 
 ### Starting Charging Process
 
-To start the charging process please perform POST request to the following endpoint:
+To start the charging process please perform a `POST` request to the following endpoint:
 
 ```
 http://localhost:7000/rest/v1/tasks/charge-customers
@@ -128,5 +128,6 @@ http://localhost:7000/rest/v1/tasks/charge-customers
 
    **Example**: we can use a poll approach, and create another endpoint that check the status of the charging of customers. That will require DB changes to keep track of the charging process.
 
-2) Improve RabbitMQ implementation, and adding retry logic.
+2) Improve RabbitMQ implementation, such as adding retry logic.
+3) IMPORTANT: Integration test for testing the Database, and the messaging process.
  
