@@ -1,4 +1,6 @@
-
+import com.rabbitmq.client.BuiltinExchangeType
+import com.rabbitmq.client.Channel
+import com.rabbitmq.client.ConnectionFactory
 import io.pleo.antaeus.core.external.PaymentProvider
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.models.Currency
@@ -37,4 +39,17 @@ internal fun getPaymentProvider(): PaymentProvider {
                 return Random.nextBoolean()
         }
     }
+}
+
+// This will create a Channel for the given queue, and exchange names
+internal fun createQueueChannel(queueName: String, exchangeName: String): Channel {
+    val factory = ConnectionFactory()
+    factory.host = System.getenv("RABBITMQ_HOST") ?: "localhost"
+    val connection = factory.newConnection()
+    val channel: Channel = connection.createChannel()
+
+    channel.queueDeclare(queueName, false, false, false, null)
+    channel.exchangeDeclare(exchangeName, BuiltinExchangeType.DIRECT)
+    channel.queueBind(queueName, exchangeName, queueName)
+    return channel
 }

@@ -7,15 +7,20 @@ package io.pleo.antaeus.rest
 import io.javalin.Javalin
 import io.javalin.apibuilder.ApiBuilder.get
 import io.javalin.apibuilder.ApiBuilder.path
+import io.javalin.apibuilder.ApiBuilder.post
 import io.pleo.antaeus.core.exceptions.EntityNotFoundException
 import io.pleo.antaeus.core.services.CustomerService
 import io.pleo.antaeus.core.services.InvoiceService
+import io.pleo.antaeus.core.tasks.InvoiceChargingTask
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import mu.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 private val thisFile: () -> Unit = {}
 
 class AntaeusRest(
+    private val invoiceChargingTask: InvoiceChargingTask,
     private val invoiceService: InvoiceService,
     private val customerService: CustomerService
 ) : Runnable {
@@ -64,6 +69,15 @@ class AntaeusRest(
                         // URL: /rest/v1/invoices/{:id}
                         get(":id") {
                             it.json(invoiceService.fetch(it.pathParam("id").toInt()))
+                        }
+                    }
+                    path("tasks") {
+                        // URL: /rest/v1/tasks/charge-customers
+                        post("charge-customers") {
+                            GlobalScope.launch {
+                                invoiceChargingTask.execute()
+                            }
+                            it.json("Started the process of charging customers....")
                         }
                     }
 

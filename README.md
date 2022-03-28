@@ -100,7 +100,7 @@ The solution that I came up with involves adding some new components & logic to 
 3) **Paginated invoices retrieval**: added a pagination logic for retrieving the pending invoices to avoid any memory issues when loading all invoices in-memory.
 4) **Retry on recoverable failures**: added logic to recover on exceptions that are recoverable such as: IOException, & NetworkException.
 
-> The below diagram shows the flow of charging customers based on a scheduler which will be the first of each month.
+> The below diagram shows the flow of charging customers.
 
 ![alt text](resources/Charge-customers-feature.png)
 
@@ -115,7 +115,18 @@ The solution that I came up with involves adding some new components & logic to 
 #### Technologies Used:
 - RabbitMQ: since our use-case is a point-to-point messaging. RabbitMQ is a great technology for achieving that, and it uses a push approach when a queue receives a message. 
 
-#### Future Implementations
-Since the new endpoint is an asynchronous, then we should have a mechanism to retrieve the status of the running task, and that will require introducing some new logic.
+### Starting Charging Process
 
-Example: we can use a poll approach, and create another endpoint that check the status of the charging of customers. That will require DB changes to keep track of the charging process.
+To start the charging process please perform POST request to the following endpoint:
+
+```
+http://localhost:7000/rest/v1/tasks/charge-customers
+```
+
+### Future Implementations
+1) Since the new endpoint is an asynchronous, then we should have a mechanism to retrieve the status of the running task, and that will require introducing some new logic.
+
+   **Example**: we can use a poll approach, and create another endpoint that check the status of the charging of customers. That will require DB changes to keep track of the charging process.
+
+2) Improve RabbitMQ implementation, and adding retry logic.
+ 

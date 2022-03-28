@@ -4,9 +4,9 @@ import com.rabbitmq.client.Channel
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import io.pleo.antaeus.core.messaging.InvoiceMessageProducer
 import io.pleo.antaeus.core.messaging.model.InvoiceMessage
-import io.pleo.antaeus.core.messaging.model.SUBSCRIPTION_QUEUE_NAME
+import io.pleo.antaeus.core.messaging.model.BILLING_EXCHANGE_NAME
+import io.pleo.antaeus.core.messaging.model.BILLING_QUEUE_NAME
 import org.apache.commons.lang3.SerializationUtils
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -23,8 +23,8 @@ class InvoiceMessageProducerTest {
         val invoiceMessage = InvoiceMessage(id = 12)
         every {
             channel.basicPublish(
-                    "",
-                    SUBSCRIPTION_QUEUE_NAME,
+                    BILLING_EXCHANGE_NAME,
+                    BILLING_QUEUE_NAME,
                     null,
                     SerializationUtils.serialize(invoiceMessage)
             )
@@ -43,8 +43,8 @@ class InvoiceMessageProducerTest {
         val invoiceMessage = InvoiceMessage(id = 12)
         every {
             channel.basicPublish(
-                    "",
-                    SUBSCRIPTION_QUEUE_NAME,
+                    BILLING_EXCHANGE_NAME,
+                    BILLING_QUEUE_NAME,
                     null,
                     SerializationUtils.serialize(invoiceMessage)
             )

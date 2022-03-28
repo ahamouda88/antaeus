@@ -75,7 +75,6 @@ class AntaeusDal(private val db: Database) {
                     it[this.customerId] = customer.id
                 } get InvoiceTable.id
         }
-
         return fetchInvoice(id)
     }
 
