@@ -8,6 +8,7 @@ import io.pleo.antaeus.core.exceptions.InvoiceNotFoundException
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.data.model.InvoiceSearchQuery
 import io.pleo.antaeus.models.Invoice
+import io.pleo.antaeus.models.InvoiceListResult
 
 class InvoiceService(private val dal: AntaeusDal) {
     fun fetchAll(): List<Invoice> {
@@ -22,7 +23,7 @@ class InvoiceService(private val dal: AntaeusDal) {
         return dal.updateInvoice(updatedInvoice)
     }
 
-    fun searchInvoices(invoiceSearchQuery: InvoiceSearchQuery): List<Invoice> {
-        return dal.searchInvoices(invoiceSearchQuery)
+    fun searchInvoicesPaginated(invoiceSearchQuery: InvoiceSearchQuery): InvoiceListResult {
+        return dal.searchInvoicesPaginated(invoiceSearchQuery)
     }
 }

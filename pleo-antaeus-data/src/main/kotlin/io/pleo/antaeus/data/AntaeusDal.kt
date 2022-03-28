@@ -11,6 +11,7 @@ import io.pleo.antaeus.data.model.InvoiceSearchQuery
 import io.pleo.antaeus.models.Currency
 import io.pleo.antaeus.models.Customer
 import io.pleo.antaeus.models.Invoice
+import io.pleo.antaeus.models.InvoiceListResult
 import io.pleo.antaeus.models.InvoiceStatus
 import io.pleo.antaeus.models.Money
 import org.jetbrains.exposed.sql.*
@@ -37,15 +38,17 @@ class AntaeusDal(private val db: Database) {
         }
     }
 
-    fun searchInvoices(invoiceSearchQuery: InvoiceSearchQuery): List<Invoice> {
+    fun searchInvoicesPaginated(invoiceSearchQuery: InvoiceSearchQuery): InvoiceListResult {
         with(invoiceSearchQuery) {
             val selectExpression: Op<Boolean> = InvoiceTable.status.eq(status.name)
-
-            return transaction(db) {
-                InvoiceTable
-                        .select { selectExpression }
+            val invoices = transaction(db) {
+                InvoiceTable.select { selectExpression }
+                        .limit(n = limit, offset = offset)
+                        .orderBy(InvoiceTable.id)
                         .map { it.toInvoice() }
             }
+            val totalNumberOfRecords: Int = InvoiceTable.count(selectExpression = selectExpression)
+            return InvoiceListResult(result = invoices, hasMore = totalNumberOfRecords > offset + invoices.size)
         }
     }
 
@@ -104,5 +107,11 @@ class AntaeusDal(private val db: Database) {
         }
 
         return fetchCustomer(id)
+    }
+
+    private fun <T: Table> T.count(selectExpression: Op<Boolean>): Int {
+        return transaction(db) {
+            this@count.select { selectExpression }.count()
+        }
     }
 }

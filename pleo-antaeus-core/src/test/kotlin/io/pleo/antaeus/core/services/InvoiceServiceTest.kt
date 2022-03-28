@@ -5,10 +5,7 @@ import io.mockk.mockk
 import io.pleo.antaeus.core.exceptions.InvoiceNotFoundException
 import io.pleo.antaeus.data.AntaeusDal
 import io.pleo.antaeus.data.model.InvoiceSearchQuery
-import io.pleo.antaeus.models.Currency
-import io.pleo.antaeus.models.Invoice
-import io.pleo.antaeus.models.InvoiceStatus
-import io.pleo.antaeus.models.Money
+import io.pleo.antaeus.models.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -25,7 +22,6 @@ class InvoiceServiceTest {
     private val dal: AntaeusDal = mockk {
         every { fetchInvoice(404) } returns null
         every { updateInvoice(invoice) } returns invoice
-        every { searchInvoices(searchQuery) } returns listOf(invoice)
     }
 
     private val invoiceService: InvoiceService = InvoiceService(dal = dal)
@@ -39,11 +35,16 @@ class InvoiceServiceTest {
 
     @Test
     fun `will search invoices`() {
-        assertEquals(invoiceService.searchInvoices(invoiceSearchQuery = searchQuery), listOf(invoice))
+        val invoiceListResult = InvoiceListResult(result = listOf(invoice), hasMore = false)
+        every { dal.searchInvoicesPaginated(searchQuery) } returns invoiceListResult
+
+        val actualResult = invoiceService.searchInvoicesPaginated(invoiceSearchQuery = searchQuery)
+
+        assertEquals(invoiceListResult, actualResult)
     }
 
     @Test
     fun `will update invoice`() {
-        assertEquals(invoiceService.updateInvoice(invoice), invoice)
+        assertEquals(invoice, invoiceService.updateInvoice(invoice))
     }
 }

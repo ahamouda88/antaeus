@@ -26,16 +26,18 @@ class BillingService(
      */
     fun chargeCustomer(invoiceId: Int) {
         val invoice: Invoice = invoiceService.fetch(id = invoiceId)
-        // Make sure that invoice is not Paid before charging the customer.
-        if (invoice.status == InvoiceStatus.PAID) {
-            logger.warn { "Invoice '$invoiceId' is already paid!" }
-            return
+        when (invoice.status) {
+            InvoiceStatus.PAID -> {
+                logger.warn { "Invoice '$invoiceId' is already paid!" }
+            }
+            InvoiceStatus.PENDING -> {
+                // Will keep the Customer & Currency validation on the Payment Provider service.
+                val chargeStatus: Boolean = retryUtils.retry { paymentProvider.charge(invoice) }
+                if (!chargeStatus) {
+                    throw InsufficientBalanceException(invoiceId = invoiceId, customerId = invoice.customerId)
+                }
+                invoiceService.updateInvoice(invoice.copy(status = InvoiceStatus.PAID))
+            }
         }
-        // Will keep the Customer & Currency validation on the Payment Provider service.
-        val chargeStatus: Boolean = retryUtils.retry { paymentProvider.charge(invoice) }
-        if (!chargeStatus) {
-            throw InsufficientBalanceException(invoiceId = invoiceId, customerId = invoice.customerId)
-        }
-        invoiceService.updateInvoice(invoice.copy(status = InvoiceStatus.PAID))
     }
 }
