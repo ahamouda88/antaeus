@@ -36,3 +36,12 @@ fun Project.dataLibs() {
         "implementation"("org.xerial:sqlite-jdbc:3.30.1")
     }
 }
+
+/**
+ * Configures messaging libs needed for producing/consuming messages
+ */
+fun Project.messagingLibs() {
+    dependencies {
+        "implementation"("com.rabbitmq:amqp-client:5.14.2")
+    }
+}

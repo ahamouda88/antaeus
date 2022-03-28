@@ -7,6 +7,8 @@ kotlinProject()
 
 dataLibs()
 
+messagingLibs()
+
 application {
     mainClassName = "io.pleo.antaeus.app.AntaeusApp"
 }
