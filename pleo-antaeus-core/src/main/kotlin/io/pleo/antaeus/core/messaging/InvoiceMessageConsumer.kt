@@ -13,10 +13,10 @@ class InvoiceMessageConsumer(channel: Channel, private val billingService: Billi
 
     private val logger = KotlinLogging.logger {}
 
-    override fun handleDelivery(consumerTag: String?,
-                                envelope: Envelope?,
-                                properties: AMQP.BasicProperties?,
-                                body: ByteArray?) {
+    override fun handleDelivery(consumerTag: String,
+                                envelope: Envelope,
+                                properties: AMQP.BasicProperties,
+                                body: ByteArray) {
         val message: InvoiceMessage = SerializationUtils.deserialize(body)
         logger.info { "[$consumerTag] Received message: '$message'." }
 
@@ -25,5 +25,6 @@ class InvoiceMessageConsumer(channel: Channel, private val billingService: Billi
         } catch (ex: Exception) {
             logger.warn(ex) { "[$consumerTag] Failed to consume message: '$message' due to: '${ex.message}'" }
         }
+        channel.basicAck(envelope.deliveryTag, false)
     }
 }

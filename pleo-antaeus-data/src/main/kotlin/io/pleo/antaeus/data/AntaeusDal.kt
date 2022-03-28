@@ -53,14 +53,12 @@ class AntaeusDal(private val db: Database) {
     }
 
     fun updateInvoice(updatedInvoice: Invoice): Invoice {
-        with(updatedInvoice) {
-            transaction(db) {
-                // Update the invoice.
-                InvoiceTable.update {
-                    it[this.value] = amount.value
-                    it[this.currency] = amount.currency.toString()
-                    it[this.status] = status.toString()
-                }
+        transaction(db) {
+            // Update the invoice.
+            InvoiceTable.update {
+                it[this.value] = updatedInvoice.amount.value
+                it[this.currency] = updatedInvoice.amount.currency.toString()
+                it[this.status] = updatedInvoice.status.toString()
             }
         }
         return updatedInvoice

@@ -29,13 +29,15 @@ Open the project using your favorite text editor. If you are using IntelliJ, you
 
 ### Running
 
-There are 2 options for running Anteus. You either need libsqlite3 or docker. Docker is easier but requires some docker knowledge. We do recommend docker though.
+There are 2 options for running Anteus. You either need libsqlite3 & rabbitmq or docker. Docker is easier but requires some docker knowledge. We do recommend docker though.
 
 *Running Natively*
 
 Native java with sqlite (requires libsqlite3):
-
 If you use homebrew on MacOS `brew install sqlite`.
+
+Messaging system (requires rabbitmq):
+If you use homebrew on MacOS `brew install rabbitmq`.
 
 ```
 ./gradlew run
@@ -43,11 +45,10 @@ If you use homebrew on MacOS `brew install sqlite`.
 
 *Running through docker*
 
-Install docker for your platform
+Install docker for your platform. Execute the below command to build & start application. 
 
 ```
-docker build -t antaeus
-docker run antaeus
+docker-compose up
 ```
 
 ### App Structure
@@ -86,3 +87,35 @@ The code given is structured as follows. Feel free however to modify the structu
 * [Sqlite3](https://sqlite.org/index.html) - Database storage engine
 
 Happy hacking 😁!
+
+## Charge Customer Feature
+
+### Solution
+
+Create an asynchronous API that can be triggered manually or using a scheduler. This API will retrieve all pending invoices, and send the ids of invoices to a queue which will then be consumed, and processed by the billing service.
+
+The solution that I came up with involves adding some new components & logic to the system to solve several problems:
+1) **Asynchronous API**: to avoid a long-running connection between the server, and the client specially when iterating through huge number of invoices.
+2) **Message broker**: used a message broker in-order to decouple the API logic from the customer charging process. That will gives us the advantage of easily scaling the system and consuming huge number of messages, as well as in the future we can have the messaging process as a separate service.
+3) **Paginated invoices retrieval**: added a pagination logic for retrieving the pending invoices to avoid any memory issues when loading all invoices in-memory.
+4) **Retry on recoverable failures**: added logic to recover on exceptions that are recoverable such as: IOException, & NetworkException.
+
+> The below diagram shows the flow of charging customers based on a scheduler which will be the first of each month.
+
+![alt text](resources/Charge-customers-feature.png)
+
+#### Components
+- **Invoice Charging Task**: retrieves all pending invoices, create an invoice message, and send them to the message producer. An invoice message will consist of the invoice id.
+- **Message Producer**: produces, and publishes the invoice messages to the message queue.
+- **Message Queue**: holds the invoice message.
+- **Message Consumer**: consumes messages from the queue.
+- **Billing Service**: calls payment provider to charge customers, and updates the database in case of a successful payment.
+- **Payment Provider**: an external service that does the actual customer charging of the invoice.
+
+#### Technologies Used:
+- RabbitMQ: since our use-case is a point-to-point messaging. RabbitMQ is a great technology for achieving that, and it uses a push approach when a queue receives a message. 
+
+#### Future Implementations
+Since the new endpoint is an asynchronous, then we should have a mechanism to retrieve the status of the running task, and that will require introducing some new logic.
+
+Example: we can use a poll approach, and create another endpoint that check the status of the charging of customers. That will require DB changes to keep track of the charging process.
